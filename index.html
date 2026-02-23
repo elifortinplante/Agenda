@@ -44,28 +44,25 @@ h1 { margin: 0; font-size: 22px; }
 .todo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: rgba(255,255,255,0.8);
   padding: 10px;
   border-radius: 10px;
   margin-top: 10px;
 }
 
-.left-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.drag {
-  font-size: 18px;
-  cursor: grab;
-  user-select: none;
+.todo span {
+  flex: 1;
+  margin-left: 10px;
 }
 
 .right-buttons {
   display: flex;
   gap: 10px;
+}
+
+.drag {
+  cursor: grab;
+  user-select: none;
 }
 
 button {
@@ -98,9 +95,7 @@ input[type="text"] {
   font-weight: bold;
 }
 
-.dragging {
-  opacity: 0.4;
-}
+.dragging { opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -162,13 +157,11 @@ for(let i=1;i<=daysInMonth;i++){
   const div=document.createElement("div");
   div.className="day-box";
   div.textContent=i;
-
   div.onclick=()=>{
     selectedDate = new Date(today.getFullYear(), today.getMonth(), i);
     updateDayView();
     showPage('dayPage');
   };
-
   daysGrid.appendChild(div);
 }
 
@@ -199,8 +192,22 @@ function displayTasks(){
     const div=document.createElement("div");
     div.className="todo";
 
-    const left=document.createElement("div");
-    left.className="left-buttons";
+    // checkbox gauche
+    const check=document.createElement("input");
+    check.type="checkbox";
+    check.checked=task.done;
+    check.onchange=()=>{
+      task.done=check.checked;
+      saveTasks(tasks);
+    };
+
+    // texte
+    const text=document.createElement("span");
+    text.textContent=task.text;
+
+    // boutons droite
+    const right=document.createElement("div");
+    right.className="right-buttons";
 
     const drag=document.createElement("span");
     drag.textContent="🔁";
@@ -218,24 +225,14 @@ function displayTasks(){
     del.textContent="🗑️";
     del.onclick=()=>deleteTask(index);
 
-    left.appendChild(drag);
-    left.appendChild(edit);
-    left.appendChild(del);
+    right.appendChild(drag);
+    right.appendChild(edit);
+    right.appendChild(del);
 
-    const text=document.createElement("span");
-    text.textContent=task.text;
-
-    const check=document.createElement("input");
-    check.type="checkbox";
-    check.checked=task.done;
-    check.onchange=()=>{
-      task.done=check.checked;
-      saveTasks(tasks);
-    };
-
-    div.appendChild(left);
-    div.appendChild(text);
     div.appendChild(check);
+    div.appendChild(text);
+    div.appendChild(right);
+
     todoList.appendChild(div);
   });
 
@@ -311,7 +308,6 @@ function enableDrag(){
 
   function endDrag(){
     if(!dragged) return;
-
     dragged.classList.remove("dragging");
     document.body.style.overflow="auto";
 
