@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Agenda</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+  background: url("https://i.pinimg.com/originals/uu/os/GN/iN8.jpg") no-repeat center center fixed;
+  background-size: cover;
+}
+
+.page {
+  display: none;
+  padding: 20px;
+  padding-bottom: 80px;
+}
+
+.active { display: block; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.dateTop {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+/* month */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day-box {
+  background: rgba(0,0,0,0.5);
+  padding: 12px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+/* todo */
+.todo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.6);
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.right-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: white;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
+}
+
+/* nav */
+.nav {
+  position: fixed;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.nav button {
+  background: rgba(0,0,0,0.6);
+  padding: 12px 25px;
+  border-radius: 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- MONTH PAGE -->
+<div id="monthPage" class="page active">
+  <div class="dateTop" id="todayTop"></div>
+  <h1 id="monthTitle"></h1>
+  <div class="grid" id="daysGrid"></div>
+</div>
+
+<!-- DAY PAGE -->
+<div id="dayPage" class="page">
+  <div class="header">
+    <h1 id="dateTitle"></h1>
+    <button onclick="showInput()">➕</button>
+  </div>
+
+  <input id="taskInput" type="text" placeholder="Nouvelle tâche..." style="display:none">
+
+  <div id="todoList"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="showPage('monthPage')">Month</button>
+  <button onclick="showPage('dayPage')">Day</button>
+</div>
+
+<script>
+const today = new Date();
+
+// date complète
+const fullDate = today.toLocaleDateString('fr-FR', {
+  weekday:'long', day:'numeric', month:'long'
+});
+
+document.getElementById("dateTitle").textContent = fullDate;
+document.getElementById("todayTop").textContent = fullDate;
+
+// month
+const monthName = today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+document.getElementById("monthTitle").textContent = monthName;
+
+const daysGrid = document.getElementById("daysGrid");
+const daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+
+for(let i=1;i<=daysInMonth;i++){
+  const div = document.createElement("div");
+  div.className="day-box";
+  div.textContent=i;
+  daysGrid.appendChild(div);
+}
+
+// navigation
+function showPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+}
+
+// storage
+function getTasks(){
+  return JSON.parse(localStorage.getItem("tasks") || "[]");
+}
+
+function saveTasks(tasks){
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// display tasks
+const todoList = document.getElementById("todoList");
+
+function displayTasks(){
+  todoList.innerHTML="";
+  const tasks = getTasks();
+
+  tasks.forEach((task,index)=>{
+    const div = document.createElement("div");
+    div.className="todo";
+
+    const check = document.createElement("input");
+    check.type="checkbox";
+    check.checked=task.done;
+    check.onchange=()=>{
+      task.done=check.checked;
+      saveTasks(tasks);
+    };
+
+    const text = document.createElement("span");
+    text.textContent=task.text;
+
+    const right = document.createElement("div");
+    right.className="right-buttons";
+
+    const edit = document.createElement("button");
+    edit.textContent="✏️";
+    edit.onclick=()=>{
+      taskInput.style.display="block";
+      taskInput.value=task.text;
+      taskInput.focus();
+      deleteTask(index);
+    };
+
+    const del = document.createElement("button");
+    del.textContent="🗑️";
+    del.onclick=()=>deleteTask(index);
+
+    right.appendChild(edit);
+    right.appendChild(del);
+
+    div.appendChild(check);
+    div.appendChild(text);
+    div.appendChild(right);
+
+    todoList.appendChild(div);
+  });
+}
+
+function deleteTask(i){
+  const tasks=getTasks();
+  tasks.splice(i,1);
+  saveTasks(tasks);
+  displayTasks();
+}
+
+// add task
+const taskInput=document.getElementById("taskInput");
+
+function showInput(){
+  taskInput.style.display="block";
+  taskInput.focus();
+}
+
+taskInput.addEventListener("keypress", e=>{
+  if(e.key==="Enter" && taskInput.value.trim()!=""){
+    const tasks=getTasks();
+    tasks.push({text:taskInput.value, done:false});
+    saveTasks(tasks);
+    taskInput.value="";
+    taskInput.style.display="none";
+    displayTasks();
+  }
+});
+
+displayTasks();
+</script>
+</body>
+</html>
