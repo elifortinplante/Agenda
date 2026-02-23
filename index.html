@@ -10,24 +10,19 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   color: #1e2a44;
-
-  /* fond Snoopy intégré */
   background: url("/mnt/data/FBC31E39-C917-46C5-AC12-9BCFB986E481.jpeg") no-repeat center center fixed;
   background-size: cover;
 }
 
-/* pages */
 .page {
   display: none;
   padding: 20px;
   padding-bottom: 80px;
 }
-
 .active { display: block; }
 
 .dateTop {
   text-align: center;
-  font-size: 16px;
   margin-bottom: 6px;
 }
 
@@ -37,33 +32,27 @@ body {
   align-items: center;
 }
 
-h1 {
-  margin: 0;
-  font-size: 22px;
-}
+h1 { margin: 0; font-size: 22px; }
 
-/* calendrier */
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-  margin-top: 10px;
 }
 
 .day-box {
-  background: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.7);
   padding: 12px;
   text-align: center;
   border-radius: 10px;
   font-weight: bold;
 }
 
-/* todo */
 .todo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.8);
   padding: 10px;
   border-radius: 10px;
   margin-top: 10px;
@@ -88,7 +77,6 @@ input[type="text"] {
   margin-top: 10px;
 }
 
-/* navigation */
 .nav {
   position: fixed;
   bottom: 12px;
@@ -99,7 +87,7 @@ input[type="text"] {
 }
 
 .nav button {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.8);
   padding: 12px 25px;
   border-radius: 20px;
   font-weight: bold;
@@ -108,14 +96,14 @@ input[type="text"] {
 </head>
 <body>
 
-<!-- PAGE MONTH -->
+<!-- MONTH -->
 <div id="monthPage" class="page active">
   <div id="todayTop" class="dateTop"></div>
   <h1 id="monthTitle"></h1>
   <div class="grid" id="daysGrid"></div>
 </div>
 
-<!-- PAGE DAY -->
+<!-- DAY -->
 <div id="dayPage" class="page">
   <div class="header">
     <h1 id="dateTitle"></h1>
@@ -126,39 +114,48 @@ input[type="text"] {
   <div id="todoList"></div>
 </div>
 
-<!-- NAVIGATION -->
+<!-- NAV -->
 <div class="nav">
   <button onclick="showPage('monthPage')">Month</button>
   <button onclick="showPage('dayPage')">Day</button>
 </div>
 
 <script>
-// 📅 DATE FIABLE (iPhone compatible)
 const jours = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 
+let selectedDate = new Date();
+
+function formatDate(date){
+  return jours[date.getDay()]+" "+date.getDate()+" "+mois[date.getMonth()];
+}
+
+function updateDayView(){
+  document.getElementById("dateTitle").textContent = formatDate(selectedDate);
+  displayTasks();
+}
+
+// afficher date du jour en haut du month
 const today = new Date();
-
-const texteDate =
-  jours[today.getDay()] + " " +
-  today.getDate() + " " +
-  mois[today.getMonth()];
-
-document.getElementById("dateTitle").textContent = texteDate;
-document.getElementById("todayTop").textContent = texteDate;
-
-// titre mois
+document.getElementById("todayTop").textContent = formatDate(today);
 document.getElementById("monthTitle").textContent =
-  mois[today.getMonth()] + " " + today.getFullYear();
+  mois[today.getMonth()]+" "+today.getFullYear();
 
-// générer les jours
-const daysGrid = document.getElementById("daysGrid");
-const daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+// générer les jours cliquables
+const daysGrid=document.getElementById("daysGrid");
+const daysInMonth=new Date(today.getFullYear(), today.getMonth()+1,0).getDate();
 
 for(let i=1;i<=daysInMonth;i++){
-  const div = document.createElement("div");
+  const div=document.createElement("div");
   div.className="day-box";
   div.textContent=i;
+
+  div.onclick=()=>{
+    selectedDate = new Date(today.getFullYear(), today.getMonth(), i);
+    updateDayView();
+    showPage('dayPage');
+  };
+
   daysGrid.appendChild(div);
 }
 
@@ -168,21 +165,25 @@ function showPage(page){
   document.getElementById(page).classList.add("active");
 }
 
-// stockage
+// stockage par date
+function getKey(){
+  return "tasks-"+selectedDate.toDateString();
+}
+
 function getTasks(){
-  return JSON.parse(localStorage.getItem("tasks") || "[]");
+  return JSON.parse(localStorage.getItem(getKey())||"[]");
 }
 
 function saveTasks(tasks){
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem(getKey(), JSON.stringify(tasks));
 }
 
 // affichage tâches
-const todoList = document.getElementById("todoList");
+const todoList=document.getElementById("todoList");
 
 function displayTasks(){
   todoList.innerHTML="";
-  const tasks = getTasks();
+  const tasks=getTasks();
 
   tasks.forEach((task,index)=>{
     const div=document.createElement("div");
@@ -220,7 +221,6 @@ function displayTasks(){
     div.appendChild(check);
     div.appendChild(text);
     div.appendChild(right);
-
     todoList.appendChild(div);
   });
 }
@@ -251,7 +251,8 @@ taskInput.addEventListener("keypress", e=>{
   }
 });
 
-displayTasks();
+// afficher aujourd'hui par défaut
+updateDayView();
 </script>
 </body>
 </html>
