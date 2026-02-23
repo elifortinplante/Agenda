@@ -17,93 +17,93 @@ body {
 .page { display: none; padding: 20px; padding-bottom: 80px; }
 .active { display: block; }
 
-.dateTop { text-align: center; margin-bottom: 6px; }
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.headerMonth {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
 }
 
-h1 { margin: 0; font-size: 22px; }
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
 }
 
 .day-box {
-  background: rgba(255,255,255,0.7);
-  padding: 12px;
-  text-align: center;
-  border-radius: 10px;
-  font-weight: bold;
+  background:rgba(255,255,255,0.7);
+  padding:12px;
+  text-align:center;
+  border-radius:10px;
+  font-weight:bold;
 }
 
 .todo {
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.8);
-  padding: 10px;
-  border-radius: 10px;
-  margin-top: 10px;
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,0.8);
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
 }
 
-.todo span {
-  flex: 1;
-  margin-left: 10px;
-}
+.todo span { flex:1; margin-left:10px; }
 
 .right-buttons {
-  display: flex;
-  gap: 10px;
+  display:flex;
+  gap:10px;
 }
 
-.drag {
-  cursor: grab;
-  user-select: none;
-}
+.drag { cursor:grab; user-select:none; }
 
 button {
-  border: none;
-  background: none;
-  font-size: 18px;
+  border:none;
+  background:none;
+  font-size:18px;
 }
 
 input[type="text"] {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  margin-top: 10px;
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
 }
 
 .nav {
-  position: fixed;
-  bottom: 12px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 40px;
+  position:fixed;
+  bottom:12px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:40px;
 }
 
 .nav button {
-  background: rgba(255,255,255,0.8);
-  padding: 12px 25px;
-  border-radius: 20px;
-  font-weight: bold;
+  background:rgba(255,255,255,0.8);
+  padding:12px 25px;
+  border-radius:20px;
+  font-weight:bold;
 }
 
-.dragging { opacity: 0.4; }
+.dragging { opacity:0.4; }
 </style>
 </head>
 <body>
 
 <!-- MONTH -->
 <div id="monthPage" class="page active">
-  <div id="todayTop" class="dateTop"></div>
-  <h1 id="monthTitle"></h1>
+  <div class="headerMonth">
+    <button onclick="changeMonth(-1)">◀️</button>
+    <h1 id="monthTitle"></h1>
+    <button onclick="changeMonth(1)">▶️</button>
+  </div>
   <div class="grid" id="daysGrid"></div>
 </div>
 
@@ -125,44 +125,29 @@ input[type="text"] {
 </div>
 
 <script>
-const jours = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
-const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const jours=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+const mois=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 
-let selectedDate = new Date();
-const today = new Date();
+let selectedDate=new Date();
+selectedDate.setHours(12,0,0,0);
+
+let currentMonth=new Date();
+currentMonth.setDate(1);
 
 function formatDate(date){
   return jours[date.getDay()]+" "+date.getDate()+" "+mois[date.getMonth()];
 }
 
 function updateDayView(){
-  document.getElementById("dateTitle").textContent = formatDate(selectedDate);
+  document.getElementById("dateTitle").textContent=formatDate(selectedDate);
   displayTasks();
 }
 
 function goToToday(){
-  selectedDate = new Date();
+  selectedDate=new Date();
+  selectedDate.setHours(12,0,0,0);
   updateDayView();
   showPage('dayPage');
-}
-
-document.getElementById("todayTop").textContent = formatDate(today);
-document.getElementById("monthTitle").textContent =
-  mois[today.getMonth()]+" "+today.getFullYear();
-
-const daysGrid=document.getElementById("daysGrid");
-const daysInMonth=new Date(today.getFullYear(), today.getMonth()+1,0).getDate();
-
-for(let i=1;i<=daysInMonth;i++){
-  const div=document.createElement("div");
-  div.className="day-box";
-  div.textContent=i;
-  div.onclick=()=>{
-    selectedDate = new Date(today.getFullYear(), today.getMonth(), i);
-    updateDayView();
-    showPage('dayPage');
-  };
-  daysGrid.appendChild(div);
 }
 
 function showPage(page){
@@ -170,8 +155,44 @@ function showPage(page){
   document.getElementById(page).classList.add("active");
 }
 
+const daysGrid=document.getElementById("daysGrid");
+
+function generateCalendar(){
+  daysGrid.innerHTML="";
+  const year=currentMonth.getFullYear();
+  const month=currentMonth.getMonth();
+
+  document.getElementById("monthTitle").textContent=
+    mois[month]+" "+year;
+
+  const daysInMonth=new Date(year,month+1,0).getDate();
+
+  for(let i=1;i<=daysInMonth;i++){
+    const div=document.createElement("div");
+    div.className="day-box";
+    div.textContent=i;
+
+    div.onclick=()=>{
+      selectedDate=new Date(year,month,i);
+      selectedDate.setHours(12,0,0,0);
+      updateDayView();
+      showPage('dayPage');
+    };
+
+    daysGrid.appendChild(div);
+  }
+}
+
+function changeMonth(step){
+  currentMonth.setMonth(currentMonth.getMonth()+step);
+  generateCalendar();
+}
+
 function getKey(){
-  return "tasks-"+selectedDate.toDateString();
+  const y=selectedDate.getFullYear();
+  const m=String(selectedDate.getMonth()+1).padStart(2,'0');
+  const d=String(selectedDate.getDate()).padStart(2,'0');
+  return `tasks-${y}-${m}-${d}`;
 }
 
 function getTasks(){
@@ -179,7 +200,7 @@ function getTasks(){
 }
 
 function saveTasks(tasks){
-  localStorage.setItem(getKey(), JSON.stringify(tasks));
+  localStorage.setItem(getKey(),JSON.stringify(tasks));
 }
 
 const todoList=document.getElementById("todoList");
@@ -192,7 +213,6 @@ function displayTasks(){
     const div=document.createElement("div");
     div.className="todo";
 
-    // checkbox gauche
     const check=document.createElement("input");
     check.type="checkbox";
     check.checked=task.done;
@@ -201,11 +221,9 @@ function displayTasks(){
       saveTasks(tasks);
     };
 
-    // texte
     const text=document.createElement("span");
     text.textContent=task.text;
 
-    // boutons droite
     const right=document.createElement("div");
     right.className="right-buttons";
 
@@ -253,10 +271,10 @@ function showInput(){
   taskInput.focus();
 }
 
-taskInput.addEventListener("keypress", e=>{
+taskInput.addEventListener("keypress",e=>{
   if(e.key==="Enter" && taskInput.value.trim()!=""){
     const tasks=getTasks();
-    tasks.push({text:taskInput.value, done:false});
+    tasks.push({text:taskInput.value,done:false});
     saveTasks(tasks);
     taskInput.value="";
     taskInput.style.display="none";
@@ -271,8 +289,8 @@ function enableDrag(){
   list.querySelectorAll(".drag").forEach(handle=>{
     const item=handle.closest(".todo");
 
-    handle.addEventListener("touchstart", startDrag,{passive:false});
-    handle.addEventListener("mousedown", startDrag);
+    handle.addEventListener("touchstart",startDrag,{passive:false});
+    handle.addEventListener("mousedown",startDrag);
 
     function startDrag(e){
       e.preventDefault();
@@ -282,8 +300,8 @@ function enableDrag(){
     }
   });
 
-  document.addEventListener("touchmove", moveDrag,{passive:false});
-  document.addEventListener("mousemove", moveDrag);
+  document.addEventListener("touchmove",moveDrag,{passive:false});
+  document.addEventListener("mousemove",moveDrag);
 
   function moveDrag(e){
     if(!dragged) return;
@@ -299,12 +317,12 @@ function enableDrag(){
     if(after==null){
       list.appendChild(dragged);
     } else if(after!==dragged){
-      list.insertBefore(dragged, after);
+      list.insertBefore(dragged,after);
     }
   }
 
-  document.addEventListener("touchend", endDrag);
-  document.addEventListener("mouseup", endDrag);
+  document.addEventListener("touchend",endDrag);
+  document.addEventListener("mouseup",endDrag);
 
   function endDrag(){
     if(!dragged) return;
@@ -323,6 +341,7 @@ function enableDrag(){
   }
 }
 
+generateCalendar();
 updateDayView();
 </script>
 </body>
