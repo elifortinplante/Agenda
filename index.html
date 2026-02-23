@@ -14,17 +14,10 @@ body {
   background-size: cover;
 }
 
-.page {
-  display: none;
-  padding: 20px;
-  padding-bottom: 80px;
-}
+.page { display: none; padding: 20px; padding-bottom: 80px; }
 .active { display: block; }
 
-.dateTop {
-  text-align: center;
-  margin-bottom: 6px;
-}
+.dateTop { text-align: center; margin-bottom: 6px; }
 
 .header {
   display: flex;
@@ -117,7 +110,7 @@ input[type="text"] {
 <!-- NAV -->
 <div class="nav">
   <button onclick="showPage('monthPage')">Month</button>
-  <button onclick="showPage('dayPage')">Day</button>
+  <button onclick="goToToday()">Day</button>
 </div>
 
 <script>
@@ -125,6 +118,7 @@ const jours = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"
 const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 
 let selectedDate = new Date();
+const today = new Date();
 
 function formatDate(date){
   return jours[date.getDay()]+" "+date.getDate()+" "+mois[date.getMonth()];
@@ -135,13 +129,19 @@ function updateDayView(){
   displayTasks();
 }
 
-// afficher date du jour en haut du month
-const today = new Date();
+// bouton Day → revient à aujourd’hui
+function goToToday(){
+  selectedDate = new Date();
+  updateDayView();
+  showPage('dayPage');
+}
+
+// affichage date du jour sur Month
 document.getElementById("todayTop").textContent = formatDate(today);
 document.getElementById("monthTitle").textContent =
   mois[today.getMonth()]+" "+today.getFullYear();
 
-// générer les jours cliquables
+// générer les jours
 const daysGrid=document.getElementById("daysGrid");
 const daysInMonth=new Date(today.getFullYear(), today.getMonth()+1,0).getDate();
 
@@ -178,7 +178,6 @@ function saveTasks(tasks){
   localStorage.setItem(getKey(), JSON.stringify(tasks));
 }
 
-// affichage tâches
 const todoList=document.getElementById("todoList");
 
 function displayTasks(){
@@ -232,7 +231,6 @@ function deleteTask(i){
   displayTasks();
 }
 
-// ajout tâche
 const taskInput=document.getElementById("taskInput");
 
 function showInput(){
@@ -251,7 +249,7 @@ taskInput.addEventListener("keypress", e=>{
   }
 });
 
-// afficher aujourd'hui par défaut
+// afficher aujourd’hui par défaut
 updateDayView();
 </script>
 </body>
