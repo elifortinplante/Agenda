@@ -10,7 +10,7 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   color: #1e2a44;
-  background: url("/mnt/data/FBC31E39-C917-46C5-AC12-9BCFB986E481.jpeg") no-repeat center center fixed;
+  background: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3TvhfFSaYMRRk8JVPCcsyaVrS9ge4rWvSOSe19eJVbeAkXe4suF13GpU&s=10") no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -47,7 +47,7 @@ body {
 .todo {
   display:flex;
   align-items:center;
-  background:rgba(255,255,255,0.8);
+  background:rgba(255,255,255,0.85);
   padding:10px;
   border-radius:10px;
   margin-top:10px;
@@ -161,9 +161,7 @@ function generateCalendar(){
   daysGrid.innerHTML="";
   const year=currentMonth.getFullYear();
   const month=currentMonth.getMonth();
-
-  document.getElementById("monthTitle").textContent=
-    mois[month]+" "+year;
+  document.getElementById("monthTitle").textContent=mois[month]+" "+year;
 
   const daysInMonth=new Date(year,month+1,0).getDate();
 
@@ -189,10 +187,7 @@ function changeMonth(step){
 }
 
 function getKey(){
-  const y=selectedDate.getFullYear();
-  const m=String(selectedDate.getMonth()+1).padStart(2,'0');
-  const d=String(selectedDate.getDate()).padStart(2,'0');
-  return `tasks-${y}-${m}-${d}`;
+  return "tasks-"+selectedDate.toISOString().split("T")[0];
 }
 
 function getTasks(){
@@ -306,7 +301,6 @@ function enableDrag(){
   function moveDrag(e){
     if(!dragged) return;
     e.preventDefault();
-
     const y=e.touches ? e.touches[0].clientY : e.clientY;
 
     const after=[...list.children].find(el=>{
