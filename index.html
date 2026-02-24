@@ -47,7 +47,7 @@ body {
 .todo {
   display:flex;
   align-items:center;
-  background:rgba(255,255,255,0.85);
+  background:rgba(255,255,255,0.8);
   padding:10px;
   border-radius:10px;
   margin-top:10px;
@@ -111,10 +111,15 @@ input[type="text"] {
 <div id="dayPage" class="page">
   <div class="header">
     <h1 id="dateTitle"></h1>
-    <button onclick="showInput()">➕</button>
+    <div>
+      <button onclick="showBgInput()">★</button>
+      <button onclick="showInput()">➕</button>
+    </div>
   </div>
 
+  <input id="bgInput" type="text" placeholder="Coller lien image..." style="display:none">
   <input id="taskInput" type="text" placeholder="Nouvelle tâche..." style="display:none">
+
   <div id="todoList"></div>
 </div>
 
@@ -161,6 +166,7 @@ function generateCalendar(){
   daysGrid.innerHTML="";
   const year=currentMonth.getFullYear();
   const month=currentMonth.getMonth();
+
   document.getElementById("monthTitle").textContent=mois[month]+" "+year;
 
   const daysInMonth=new Date(year,month+1,0).getDate();
@@ -187,7 +193,10 @@ function changeMonth(step){
 }
 
 function getKey(){
-  return "tasks-"+selectedDate.toISOString().split("T")[0];
+  const y=selectedDate.getFullYear();
+  const m=String(selectedDate.getMonth()+1).padStart(2,'0');
+  const d=String(selectedDate.getDate()).padStart(2,'0');
+  return `tasks-${y}-${m}-${d}`;
 }
 
 function getTasks(){
@@ -277,6 +286,30 @@ taskInput.addEventListener("keypress",e=>{
   }
 });
 
+// ⭐ FOND D'ÉCRAN PERSONNALISÉ
+const bgInput=document.getElementById("bgInput");
+
+const savedBg=localStorage.getItem("customBg");
+if(savedBg){
+  document.body.style.background=`url(${savedBg}) center/cover fixed no-repeat`;
+}
+
+function showBgInput(){
+  bgInput.style.display="block";
+  bgInput.focus();
+}
+
+bgInput.addEventListener("keypress",e=>{
+  if(e.key==="Enter" && bgInput.value.trim()!=""){
+    const url=bgInput.value.trim();
+    document.body.style.background=`url(${url}) center/cover fixed no-repeat`;
+    localStorage.setItem("customBg",url);
+    bgInput.value="";
+    bgInput.style.display="none";
+  }
+});
+
+// DRAG FLUIDE
 function enableDrag(){
   const list=document.getElementById("todoList");
   let dragged=null;
@@ -284,10 +317,10 @@ function enableDrag(){
   list.querySelectorAll(".drag").forEach(handle=>{
     const item=handle.closest(".todo");
 
-    handle.addEventListener("touchstart",startDrag,{passive:false});
-    handle.addEventListener("mousedown",startDrag);
+    handle.addEventListener("touchstart",start,{passive:false});
+    handle.addEventListener("mousedown",start);
 
-    function startDrag(e){
+    function start(e){
       e.preventDefault();
       dragged=item;
       item.classList.add("dragging");
@@ -295,30 +328,28 @@ function enableDrag(){
     }
   });
 
-  document.addEventListener("touchmove",moveDrag,{passive:false});
-  document.addEventListener("mousemove",moveDrag);
+  document.addEventListener("touchmove",move,{passive:false});
+  document.addEventListener("mousemove",move);
 
-  function moveDrag(e){
+  function move(e){
     if(!dragged) return;
     e.preventDefault();
-    const y=e.touches ? e.touches[0].clientY : e.clientY;
+
+    const y=e.touches?e.touches[0].clientY:e.clientY;
 
     const after=[...list.children].find(el=>{
       const rect=el.getBoundingClientRect();
       return y < rect.top + rect.height/2;
     });
 
-    if(after==null){
-      list.appendChild(dragged);
-    } else if(after!==dragged){
-      list.insertBefore(dragged,after);
-    }
+    if(after==null) list.appendChild(dragged);
+    else if(after!==dragged) list.insertBefore(dragged,after);
   }
 
-  document.addEventListener("touchend",endDrag);
-  document.addEventListener("mouseup",endDrag);
+  document.addEventListener("touchend",end);
+  document.addEventListener("mouseup",end);
 
-  function endDrag(){
+  function end(){
     if(!dragged) return;
     dragged.classList.remove("dragging");
     document.body.style.overflow="auto";
