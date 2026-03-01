@@ -3,371 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mon Agenda</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Oliver&display=swap" rel="stylesheet">
+
+<title>Calendar App</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: #1e2a44;
-  background: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3TvhfFSaYMRRk8JVPCcsyaVrS9ge4rWvSOSe19eJVbeAkXe4suF13GpU&s=10") no-repeat center center fixed;
-  background-size: cover;
+body{
+    margin:0;
+    background:white;
+    font-family:'Patrick Hand', cursive;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
 
-.page { display: none; padding: 20px; padding-bottom: 80px; }
-.active { display: block; }
-
-.headerMonth {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
+.screen{
+    display:none;
+    width:100%;
+    max-width:500px;
+    position:relative;
 }
 
-.header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.screen.active{
+    display:block;
 }
 
-.grid {
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
+img{
+    width:100%;
+    display:block;
 }
 
-.day-box {
-  background:rgba(255,255,255,0.7);
-  padding:12px;
-  text-align:center;
-  border-radius:10px;
-  font-weight:bold;
+/* ===== MONTH ===== */
+
+.month-title{
+    position:absolute;
+    top:12%;
+    width:100%;
+    text-align:center;
+    font-family:'Oliver', cursive;
+    font-size:6vw;
 }
 
-.todo {
-  display:flex;
-  align-items:center;
-  background:rgba(255,255,255,0.8);
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
+.month-grid{
+    position:absolute;
+    top:28%;
+    left:7%;
+    width:86%;
+    height:52%;
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    grid-template-rows:repeat(5,1fr);
 }
 
-.todo span { flex:1; margin-left:10px; }
-
-.right-buttons {
-  display:flex;
-  gap:10px;
+.month-cell{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:4.5vw;
+    cursor:pointer;
 }
 
-.drag { cursor:grab; user-select:none; }
+/* ===== DAY ===== */
 
-button {
-  border:none;
-  background:none;
-  font-size:18px;
+.day-date{
+    position:absolute;
+    top:15%;
+    width:100%;
+    text-align:center;
+    font-size:6vw;
+    font-family:'Oliver', cursive;
 }
 
-input[type="text"] {
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin-top:10px;
-}
+/* ===== SWITCH ===== */
 
-.nav {
-  position:fixed;
-  bottom:12px;
-  width:100%;
-  display:flex;
-  justify-content:center;
-  gap:40px;
+.switch{
+    position:fixed;
+    top:10px;
+    right:10px;
+    font-size:20px;
+    background:black;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:10px;
 }
-
-.nav button {
-  background:rgba(255,255,255,0.8);
-  padding:12px 25px;
-  border-radius:20px;
-  font-weight:bold;
-}
-
-.dragging { opacity:0.4; }
 </style>
 </head>
+
 <body>
 
-<!-- MONTH -->
-<div id="monthPage" class="page active">
-  <div class="headerMonth">
-    <button onclick="changeMonth(-1)">◀️</button>
-    <h1 id="monthTitle"></h1>
-    <button onclick="changeMonth(1)">▶️</button>
-  </div>
-  <div class="grid" id="daysGrid"></div>
+<button class="switch" onclick="switchScreen()">⇄</button>
+
+<!-- ===== MONTH SCREEN ===== -->
+<div class="screen active" id="monthScreen">
+    <img src="https://i.postimg.cc/NjKgZLGQ/IMG-9630.jpg">
+
+    <div class="month-title" id="monthName"></div>
+    <div class="month-grid" id="monthGrid"></div>
 </div>
 
-<!-- DAY -->
-<div id="dayPage" class="page">
-  <div class="header">
-    <h1 id="dateTitle"></h1>
-    <div>
-      <button onclick="showBgInput()">★</button>
-      <button onclick="showInput()">➕</button>
-    </div>
-  </div>
-
-  <input id="bgInput" type="text" placeholder="Coller lien image..." style="display:none">
-  <input id="taskInput" type="text" placeholder="Nouvelle tâche..." style="display:none">
-
-  <div id="todoList"></div>
-</div>
-
-<!-- NAV -->
-<div class="nav">
-  <button onclick="showPage('monthPage')">Month</button>
-  <button onclick="goToToday()">Day</button>
+<!-- ===== DAY SCREEN ===== -->
+<div class="screen" id="dayScreen">
+    <img src="https://i.postimg.cc/nrnFWkr1/2E5BA7F1-00ED-49DE-9298-9CC82519065E.png">
+    <div class="day-date" id="dayDate"></div>
 </div>
 
 <script>
-const jours=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
-const mois=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-
-let selectedDate=new Date();
-selectedDate.setHours(12,0,0,0);
-
-let currentMonth=new Date();
-currentMonth.setDate(1);
-
-function formatDate(date){
-  return jours[date.getDay()]+" "+date.getDate()+" "+mois[date.getMonth()];
+function switchScreen(){
+    document.getElementById("monthScreen").classList.toggle("active");
+    document.getElementById("dayScreen").classList.toggle("active");
 }
 
-function updateDayView(){
-  document.getElementById("dateTitle").textContent=formatDate(selectedDate);
-  displayTasks();
-}
+/* ===== AUTO CALENDAR ===== */
 
-function goToToday(){
-  selectedDate=new Date();
-  selectedDate.setHours(12,0,0,0);
-  updateDayView();
-  showPage('dayPage');
-}
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth();
 
-function showPage(page){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
-}
+const monthNames = [
+"Janvier","Février","Mars","Avril","Mai","Juin",
+"Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+];
 
-const daysGrid=document.getElementById("daysGrid");
+document.getElementById("monthName").innerText = monthNames[month];
 
-function generateCalendar(){
-  daysGrid.innerHTML="";
-  const year=currentMonth.getFullYear();
-  const month=currentMonth.getMonth();
+const firstDay = new Date(year, month, 1).getDay(); // 0 = dimanche
+const daysInMonth = new Date(year, month+1, 0).getDate();
 
-  document.getElementById("monthTitle").textContent=mois[month]+" "+year;
+const grid = document.getElementById("monthGrid");
 
-  const daysInMonth=new Date(year,month+1,0).getDate();
+for(let i=0; i<35; i++){
+    const cell = document.createElement("div");
+    cell.classList.add("month-cell");
 
-  for(let i=1;i<=daysInMonth;i++){
-    const div=document.createElement("div");
-    div.className="day-box";
-    div.textContent=i;
+    const dayNumber = i - firstDay + 1;
 
-    div.onclick=()=>{
-      selectedDate=new Date(year,month,i);
-      selectedDate.setHours(12,0,0,0);
-      updateDayView();
-      showPage('dayPage');
-    };
-
-    daysGrid.appendChild(div);
-  }
-}
-
-function changeMonth(step){
-  currentMonth.setMonth(currentMonth.getMonth()+step);
-  generateCalendar();
-}
-
-function getKey(){
-  const y=selectedDate.getFullYear();
-  const m=String(selectedDate.getMonth()+1).padStart(2,'0');
-  const d=String(selectedDate.getDate()).padStart(2,'0');
-  return `tasks-${y}-${m}-${d}`;
-}
-
-function getTasks(){
-  return JSON.parse(localStorage.getItem(getKey())||"[]");
-}
-
-function saveTasks(tasks){
-  localStorage.setItem(getKey(),JSON.stringify(tasks));
-}
-
-const todoList=document.getElementById("todoList");
-
-function displayTasks(){
-  todoList.innerHTML="";
-  const tasks=getTasks();
-
-  tasks.forEach((task,index)=>{
-    const div=document.createElement("div");
-    div.className="todo";
-
-    const check=document.createElement("input");
-    check.type="checkbox";
-    check.checked=task.done;
-    check.onchange=()=>{
-      task.done=check.checked;
-      saveTasks(tasks);
-    };
-
-    const text=document.createElement("span");
-    text.textContent=task.text;
-
-    const right=document.createElement("div");
-    right.className="right-buttons";
-
-    const drag=document.createElement("span");
-    drag.textContent="🔁";
-    drag.className="drag";
-
-    const edit=document.createElement("button");
-    edit.textContent="✏️";
-    edit.onclick=()=>{
-      taskInput.style.display="block";
-      taskInput.value=task.text;
-      deleteTask(index);
-    };
-
-    const del=document.createElement("button");
-    del.textContent="🗑️";
-    del.onclick=()=>deleteTask(index);
-
-    right.appendChild(drag);
-    right.appendChild(edit);
-    right.appendChild(del);
-
-    div.appendChild(check);
-    div.appendChild(text);
-    div.appendChild(right);
-
-    todoList.appendChild(div);
-  });
-
-  enableDrag();
-}
-
-function deleteTask(i){
-  const tasks=getTasks();
-  tasks.splice(i,1);
-  saveTasks(tasks);
-  displayTasks();
-}
-
-const taskInput=document.getElementById("taskInput");
-
-function showInput(){
-  taskInput.style.display="block";
-  taskInput.focus();
-}
-
-taskInput.addEventListener("keypress",e=>{
-  if(e.key==="Enter" && taskInput.value.trim()!=""){
-    const tasks=getTasks();
-    tasks.push({text:taskInput.value,done:false});
-    saveTasks(tasks);
-    taskInput.value="";
-    taskInput.style.display="none";
-    displayTasks();
-  }
-});
-
-// ⭐ FOND D'ÉCRAN PERSONNALISÉ
-const bgInput=document.getElementById("bgInput");
-
-const savedBg=localStorage.getItem("customBg");
-if(savedBg){
-  document.body.style.background=`url(${savedBg}) center/cover fixed no-repeat`;
-}
-
-function showBgInput(){
-  bgInput.style.display="block";
-  bgInput.focus();
-}
-
-bgInput.addEventListener("keypress",e=>{
-  if(e.key==="Enter" && bgInput.value.trim()!=""){
-    const url=bgInput.value.trim();
-    document.body.style.background=`url(${url}) center/cover fixed no-repeat`;
-    localStorage.setItem("customBg",url);
-    bgInput.value="";
-    bgInput.style.display="none";
-  }
-});
-
-// DRAG FLUIDE
-function enableDrag(){
-  const list=document.getElementById("todoList");
-  let dragged=null;
-
-  list.querySelectorAll(".drag").forEach(handle=>{
-    const item=handle.closest(".todo");
-
-    handle.addEventListener("touchstart",start,{passive:false});
-    handle.addEventListener("mousedown",start);
-
-    function start(e){
-      e.preventDefault();
-      dragged=item;
-      item.classList.add("dragging");
-      document.body.style.overflow="hidden";
+    if(dayNumber > 0 && dayNumber <= daysInMonth){
+        cell.innerText = dayNumber;
+        cell.onclick = function(){
+            openDay(dayNumber);
+        };
     }
-  });
 
-  document.addEventListener("touchmove",move,{passive:false});
-  document.addEventListener("mousemove",move);
-
-  function move(e){
-    if(!dragged) return;
-    e.preventDefault();
-
-    const y=e.touches?e.touches[0].clientY:e.clientY;
-
-    const after=[...list.children].find(el=>{
-      const rect=el.getBoundingClientRect();
-      return y < rect.top + rect.height/2;
-    });
-
-    if(after==null) list.appendChild(dragged);
-    else if(after!==dragged) list.insertBefore(dragged,after);
-  }
-
-  document.addEventListener("touchend",end);
-  document.addEventListener("mouseup",end);
-
-  function end(){
-    if(!dragged) return;
-    dragged.classList.remove("dragging");
-    document.body.style.overflow="auto";
-
-    const tasks=[...list.children].map(el=>{
-      return {
-        text: el.children[1].innerText,
-        done: el.querySelector("input").checked
-      }
-    });
-
-    saveTasks(tasks);
-    dragged=null;
-  }
+    grid.appendChild(cell);
 }
 
-generateCalendar();
-updateDayView();
+function openDay(number){
+    document.getElementById("monthScreen").classList.remove("active");
+    document.getElementById("dayScreen").classList.add("active");
+
+    document.getElementById("dayDate").innerText =
+    number + " " + monthNames[month];
+}
 </script>
+
 </body>
 </html>
