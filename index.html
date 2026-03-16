@@ -6,156 +6,255 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Oliver&display=swap" rel="stylesheet">
 
-<title>Calendar App</title>
-
 <style>
-body{
-    margin:0;
-    background:white;
-    font-family:'Patrick Hand', cursive;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+body{margin:0;overflow:hidden;}
+.screen{position:relative;width:100vw;height:100vh;display:none;}
+.screen.active{display:block;}
+.screen img{position:absolute;width:100%;height:100%;object-fit:contain;background:white;}
+.edit-btn{position:absolute;top:5%;left:5%;font-size:28px;cursor:pointer;z-index:100;}
+.settings-btn{position:absolute;top:5%;left:60px;font-size:28px;cursor:pointer;z-index:100;}
+.nav-btn{position:absolute;top:5%;font-size:28px;cursor:pointer;z-index:100;}
+.nav-left{right:70px;}
+.nav-right{right:30px;}
+.month-title{position:absolute;top:0;left:50%;transform:translateX(-50%);text-align:center;font-size:16px;font-family:'Oliver', cursive;cursor:grab;width:auto;}
+.month-grid{position:absolute;top:25%;left:5%;width:90%;height:65%;}
+.month-cell{position:absolute;font-size:18px;font-family:'Oliver', cursive;user-select:none;}
+.add-btn{position:absolute;top:5%;left:120px;background:black;color:white;padding:5px 10px;cursor:pointer;display:none;z-index:100;}
+.day-date{position:absolute;top:10%;width:auto;left:50%;transform:translateX(-50%);text-align:center;font-family:'Patrick Hand', cursive;font-size:22px;cursor:grab;}
+.text-box{position:absolute;padding:5px;background:transparent;font-family:'Patrick Hand', cursive;font-size:18px;}
+.edit-mode .text-box{border:2px solid black;}
+.resize-handle{width:12px;height:12px;background:black;position:absolute;border-radius:50%;display:none;}
+.edit-mode .resize-handle{display:block;}
+.top-left{top:-6px; left:-6px;}
+.top-right{top:-6px; right:-6px;}
+.bottom-left{bottom:-6px; left:-6px;}
+.bottom-right{bottom:-6px; right:-6px;}
+.option-menu{position:absolute;background:white;border:1px solid black;padding:6px;border-radius:8px;display:flex;gap:10px;z-index:200;}
+.option-menu button{font-size:20px;background:none;border:none;cursor:pointer;}
+#settingsBubble{
+  display:none;
+  position:absolute;
+  top:50px;
+  right:20px;
+  width:240px;
+  background:white;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  padding:10px;
+  z-index:300;
+  flex-direction:column;
+  gap:10px;
 }
-
-.screen{
-    display:none;
-    width:100%;
-    max-width:500px;
-    position:relative;
-}
-
-.screen.active{
-    display:block;
-}
-
-img{
-    width:100%;
-    display:block;
-}
-
-/* ===== MONTH ===== */
-
-.month-title{
-    position:absolute;
-    top:12%;
-    width:100%;
-    text-align:center;
-    font-family:'Oliver', cursive;
-    font-size:6vw;
-}
-
-.month-grid{
-    position:absolute;
-    top:28%;
-    left:7%;
-    width:86%;
-    height:52%;
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    grid-template-rows:repeat(5,1fr);
-}
-
-.month-cell{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:4.5vw;
-    cursor:pointer;
-}
-
-/* ===== DAY ===== */
-
-.day-date{
-    position:absolute;
-    top:15%;
-    width:100%;
-    text-align:center;
-    font-size:6vw;
-    font-family:'Oliver', cursive;
-}
-
-/* ===== SWITCH ===== */
-
-.switch{
-    position:fixed;
-    top:10px;
-    right:10px;
-    font-size:20px;
-    background:black;
-    color:white;
-    border:none;
-    padding:6px 12px;
-    border-radius:10px;
-}
+#settingsBubble input{width:100%;padding:4px;}
+#settingsBubble button{width:100%;}
 </style>
 </head>
-
 <body>
 
-<button class="switch" onclick="switchScreen()">⇄</button>
-
-<!-- ===== MONTH SCREEN ===== -->
+<!-- MONTH -->
 <div class="screen active" id="monthScreen">
-    <img src="https://i.postimg.cc/NjKgZLGQ/IMG-9630.jpg">
-
+  <img src="https://i.postimg.cc/NjKgZLGQ/IMG-9630.jpg" id="monthBg">
+  <div class="edit-btn" onclick="toggleMonthEdit()">*</div>
+  <div class="settings-btn" onclick="openSettings()">⚙️</div>
+  <div class="nav-btn nav-left" onclick="changeMonth(-1)">⬅️</div>
+  <div class="nav-btn nav-right" onclick="changeMonth(1)">➡️</div>
+  <div class="add-btn" id="addMonthBtn" onclick="addTextBoxMonth()">Ajouter zone</div>
+  <div class="month-grid" id="monthGrid">
     <div class="month-title" id="monthName"></div>
-    <div class="month-grid" id="monthGrid"></div>
+  </div>
 </div>
 
-<!-- ===== DAY SCREEN ===== -->
+<!-- DAY -->
 <div class="screen" id="dayScreen">
-    <img src="https://i.postimg.cc/nrnFWkr1/2E5BA7F1-00ED-49DE-9298-9CC82519065E.png">
-    <div class="day-date" id="dayDate"></div>
+  <img src="https://i.postimg.cc/nrnFWkr1/2E5BA7F1-00ED-49DE-9298-9CC82519065E.png" id="dayBg">
+  <div class="edit-btn" onclick="toggleDayEdit()">*</div>
+  <div class="add-btn" id="addBtn" onclick="addTextBox()">Ajouter zone</div>
+  <div class="day-date" id="dayDate"></div>
+</div>
+
+<!-- Bulle de réglages -->
+<div id="settingsBubble">
+  <button onclick="setDefaultBackground()">Mettre le fond de base</button>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <input type="text" id="dayBgUrl" placeholder="URL fond Day">
+    <button onclick="changeDayBackground()">Modifier le fond d’écran Day</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <input type="text" id="monthBgUrl" placeholder="URL fond Month">
+    <button onclick="changeMonthBackground()">Modifier le fond d’écran Month</button>
+  </div>
+  <button onclick="exportData()">Enregistrer (export JSON)</button>
+  <button onclick="importData()">Importer (JSON)</button>
+  <button onclick="resetAll()">Tout supprimer</button>
 </div>
 
 <script>
-function switchScreen(){
-    document.getElementById("monthScreen").classList.toggle("active");
-    document.getElementById("dayScreen").classList.toggle("active");
+const today=new Date();
+let month=today.getMonth();
+let year=today.getFullYear();
+const monthNames=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+document.getElementById("monthName").innerText=monthNames[month];
+
+let editMonth=false, editDay=false, currentDay=null;
+const defaultMonthBg="https://i.postimg.cc/NjKgZLGQ/IMG-9630.jpg";
+const defaultDayBg="https://i.postimg.cc/nrnFWkr1/2E5BA7F1-00ED-49DE-9298-9CC82519065E.png";
+
+// Bloquer zoom
+document.addEventListener("touchmove",e=>{if(editDay && e.touches.length>1) e.preventDefault();},{passive:false});
+
+// ===== MENU CONTEXTUEL =====
+function showMenu(box,x,y){
+  removeMenu();
+  const menu=document.createElement("div");
+  menu.className="option-menu";
+  const del=document.createElement("button"); del.innerText="🗑️"; del.onclick=()=>{box.remove(); saveTextBoxes(); saveMonthTextBoxes(); removeMenu();};
+  const dup=document.createElement("button"); dup.innerText="📄"; dup.onclick=()=>{
+    const copy=document.createElement("div");
+    copy.className="text-box";
+    copy.style.left=(box.offsetLeft+20)+"px";
+    copy.style.top=(box.offsetTop+20)+"px";
+    copy.style.width=box.style.width;
+    copy.style.height=box.style.height;
+    copy.innerHTML=box.innerHTML;
+    copy.contentEditable=true;
+    enableBox(copy);
+    createHandles(copy);
+    enableDrag(copy,()=>editDay||editMonth,null,null);
+    if(box.parentElement.id==="dayScreen") document.getElementById("dayScreen").appendChild(copy);
+    else document.getElementById("monthScreen").appendChild(copy);
+    saveTextBoxes(); saveMonthTextBoxes(); removeMenu();
+  };
+  menu.appendChild(del); menu.appendChild(dup);
+  menu.style.left=x+"px"; menu.style.top=y+"px";
+  document.body.appendChild(menu);
+  document.addEventListener("click",removeMenu,{once:true});
 }
+function removeMenu(){document.querySelectorAll(".option-menu").forEach(m=>m.remove());}
 
-/* ===== AUTO CALENDAR ===== */
-
-const today = new Date();
-const year = today.getFullYear();
-const month = today.getMonth();
-
-const monthNames = [
-"Janvier","Février","Mars","Avril","Mai","Juin",
-"Juillet","Août","Septembre","Octobre","Novembre","Décembre"
-];
-
-document.getElementById("monthName").innerText = monthNames[month];
-
-const firstDay = new Date(year, month, 1).getDay(); // 0 = dimanche
-const daysInMonth = new Date(year, month+1, 0).getDate();
-
-const grid = document.getElementById("monthGrid");
-
-for(let i=0; i<35; i++){
-    const cell = document.createElement("div");
-    cell.classList.add("month-cell");
-
-    const dayNumber = i - firstDay + 1;
-
-    if(dayNumber > 0 && dayNumber <= daysInMonth){
-        cell.innerText = dayNumber;
-        cell.onclick = function(){
-            openDay(dayNumber);
-        };
+// ===== MONTH GRID =====
+const grid=document.getElementById("monthGrid");
+function renderMonthGrid(){
+  grid.innerHTML="";
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  for(let i=0;i<35;i++){
+    const dayNum=i-firstDay+1;
+    if(dayNum>0 && dayNum<=daysInMonth){
+      const cell=document.createElement("div");
+      cell.className="month-cell";
+      cell.innerText=dayNum;
+      const col=i%7, row=Math.floor(i/7);
+      cell.style.left=(col*14.28)+"%";
+      cell.style.top=(row*20)+"%";
+      loadMonthPosition(cell,dayNum);
+      enableDrag(cell,()=>editMonth,"monthLayout",dayNum);
+      cell.onclick=()=>{if(!editMonth) openDay(dayNum);}
+      grid.appendChild(cell);
     }
+  }
+}
+renderMonthGrid();
+enableDrag(document.getElementById("monthName"),()=>editMonth,"monthTitle","title");
+loadMonthTitlePosition();
 
-    grid.appendChild(cell);
+function toggleMonthEdit(){editMonth=!editMonth; document.getElementById("addMonthBtn").style.display=editMonth?"block":"none";}
+function loadMonthPosition(el,num){let saved=JSON.parse(localStorage.getItem("monthLayout"))||{}; if(saved[num]){el.style.left=saved[num].left; el.style.top=saved[num].top;}}
+function loadMonthTitlePosition(){let saved=JSON.parse(localStorage.getItem("monthTitle"))||{}; if(saved["title"]){const t=document.getElementById("monthName"); t.style.left=saved["title"].left; t.style.top=saved["title"].top;}}
+
+// ===== DAY =====
+function openDay(day){
+  if(currentDay!==null) saveTextBoxes();
+  currentDay=day;
+  document.getElementById("monthScreen").classList.remove("active");
+  document.getElementById("dayScreen").classList.add("active");
+  document.getElementById("dayDate").innerText=day+" "+monthNames[month];
+  loadTextBoxes(); loadDayDatePosition();
+}
+function toggleDayEdit(){editDay=!editDay; document.getElementById("addBtn").style.display=editDay?"block":"none"; const screen=document.getElementById("dayScreen"); if(editDay){screen.classList.add("edit-mode");}else{screen.classList.remove("edit-mode"); saveTextBoxes();} document.querySelectorAll(".text-box").forEach(box=>{box.contentEditable=!editDay;});}
+
+// ===== TEXT BOX DAY =====
+function addTextBox(){
+  const box=document.createElement("div");
+  box.className="text-box"; box.contentEditable=true;
+  box.style.left="100px"; box.style.top="200px"; box.style.width="150px"; box.style.height="80px";
+  enableBox(box); box.ondblclick=function(e){if(editDay) showMenu(box,e.clientX,e.clientY);};
+  createHandles(box); enableDrag(box,()=>editDay,null,null);
+  document.getElementById("dayScreen").appendChild(box);
 }
 
-function openDay(number){
-    document.getElementById("monthScreen").classList.remove("active");
-    document.getElementById("dayScreen").classList.add("active");
+// ===== TEXT BOX MONTH =====
+function addTextBoxMonth(){
+  const box=document.createElement("div");
+  box.className="text-box"; box.contentEditable=true;
+  box.style.left="100px"; box.style.top="200px"; box.style.width="150px"; box.style.height="80px";
+  enableBox(box); box.ondblclick=function(e){if(editMonth) showMenu(box,e.clientX,e.clientY);};
+  createHandles(box); enableDrag(box,()=>editMonth,null,null);
+  document.getElementById("monthScreen").appendChild(box);
+  saveMonthTextBoxes();
+}
 
-    document.getElementById("dayDate").innerText =
-    number + " " + monthNames[month];
+// ===== SAVE / LOAD =====
+function saveTextBoxes(){const boxes=document.querySelectorAll("#dayScreen .text-box"); let positions=[], contents={}; boxes.forEach((b,i)=>{positions[i]={left:b.style.left,top:b.style.top,width:b.style.width,height:b.style.height}; contents[i]=b.innerHTML;}); localStorage.setItem("dayLayoutPositions",JSON.stringify(positions)); localStorage.setItem("dayContent-"+currentDay,JSON.stringify(contents));}
+function loadTextBoxes(){document.querySelectorAll("#dayScreen .text-box").forEach(b=>b.remove()); let positions=JSON.parse(localStorage.getItem("dayLayoutPositions"))||[]; let contents=JSON.parse(localStorage.getItem("dayContent-"+currentDay))||{}; positions.forEach((p,i)=>{ const box=document.createElement("div"); box.className="text-box"; box.style.left=p.left; box.style.top=p.top; box.style.width=p.width; box.style.height=p.height; box.innerHTML=contents[i]||""; box.contentEditable=true; enableBox(box); box.ondblclick=function(e){if(editDay) showMenu(box,e.clientX,e.clientY);}; createHandles(box); enableDrag(box,()=>editDay,null,null); document.getElementById("dayScreen").appendChild(box); });}
+
+function saveMonthTextBoxes(){const boxes=document.querySelectorAll("#monthScreen .text-box"); let positions=[], contents={}; boxes.forEach((b,i)=>{positions[i]={left:b.style.left,top:b.style.top,width:b.style.width,height:b.style.height}; contents[i]=b.innerHTML;}); localStorage.setItem("monthLayoutPositions",JSON.stringify(positions)); localStorage.setItem("monthContent-"+month,JSON.stringify(contents));}
+function loadMonthTextBoxes(){document.querySelectorAll("#monthScreen .text-box").forEach(b=>b.remove()); let positions=JSON.parse(localStorage.getItem("monthLayoutPositions"))||[]; let contents=JSON.parse(localStorage.getItem("monthContent-"+month))||{}; positions.forEach((p,i)=>{ const box=document.createElement("div"); box.className="text-box"; box.style.left=p.left; box.style.top=p.top; box.style.width=p.width; box.style.height=p.height; box.innerHTML=contents[i]||""; box.contentEditable=true; enableBox(box); box.ondblclick=function(e){if(editMonth) showMenu(box,e.clientX,e.clientY);}; createHandles(box); enableDrag(box,()=>editMonth,null,null); document.getElementById("monthScreen").appendChild(box); });}
+
+// ===== RESIZE =====
+function createHandles(box){["top-left","top-right","bottom-left","bottom-right"].forEach(pos=>{ const handle=document.createElement("div"); handle.className="resize-handle "+pos; handle.addEventListener("touchstart",e=>{e.stopPropagation();}); handle.addEventListener("touchmove",e=>{if(!editDay&&!editMonth)return; e.stopPropagation(); const t=e.touches[0]; const rect=box.getBoundingClientRect(); if(pos==="bottom-right"){box.style.width=(t.clientX-rect.left)+"px"; box.style.height=(t.clientY-rect.top)+"px";}}); box.appendChild(handle); });}
+
+// ===== DATE POSITION =====
+enableDrag(document.getElementById("dayDate"),()=>editDay,"dayDatePosition","date");
+function loadDayDatePosition(){let saved=JSON.parse(localStorage.getItem("dayDatePosition"))||{}; if(saved["date"]){const d=document.getElementById("dayDate"); d.style.left=saved["date"].left; d.style.top=saved["date"].top;}}
+
+// ===== DRAG =====
+function enableDrag(el,canDrag,key,id){el.addEventListener("touchstart",start); el.addEventListener("touchmove",move); el.addEventListener("touchend",end); let offsetX,offsetY; function start(e){if(!canDrag())return; const t=e.touches[0]; offsetX=t.clientX-el.offsetLeft; offsetY=t.clientY-el.offsetTop;} function move(e){if(!canDrag())return; const t=e.touches[0]; el.style.left=(t.clientX-offsetX)+"px"; el.style.top=(t.clientY-offsetY)+"px";} function end(){if(!canDrag()||!key)return; let saved=JSON.parse(localStorage.getItem(key))||{}; saved[id]={left:el.style.left,top:el.style.top}; localStorage.setItem(key,JSON.stringify(saved));}}
+
+// ===== SWIPE RETOUR MOIS =====
+let startX=0; document.getElementById("dayScreen").addEventListener("touchstart",e=>{startX=e.touches[0].clientX;}); document.getElementById("dayScreen").addEventListener("touchend",e=>{let endX=e.changedTouches[0].clientX; if(endX-startX>120 && !editDay){saveTextBoxes(); document.getElementById("dayScreen").classList.remove("active"); document.getElementById("monthScreen").classList.add("active");}});
+
+// ===== SETTINGS =====
+function openSettings(){const bubble=document.getElementById("settingsBubble"); bubble.style.display=bubble.style.display==="flex"?"none":"flex";}
+function setDefaultBackground(){document.getElementById("monthBg").src=defaultMonthBg; document.getElementById("dayBg").src=defaultDayBg; localStorage.setItem("customMonthBg",defaultMonthBg); localStorage.setItem("customDayBg",defaultDayBg); resetAll();}
+function changeDayBackground(){const url=document.getElementById("dayBgUrl").value.trim(); if(url){document.getElementById("dayBg").src=url; localStorage.setItem("customDayBg",url); resetAll();}}
+function changeMonthBackground(){const url=document.getElementById("monthBgUrl").value.trim(); if(url){document.getElementById("monthBg").src=url; localStorage.setItem("customMonthBg",url); resetAll();}}
+window.addEventListener("load",()=>{const monthBg=localStorage.getItem("customMonthBg")||defaultMonthBg; const dayBg=localStorage.getItem("customDayBg")||defaultDayBg; document.getElementById("monthBg").src=monthBg; document.getElementById("dayBg").src=dayBg; loadMonthTextBoxes();});
+
+// ===== EXPORT / IMPORT =====
+function exportData(){
+  const data={monthBg:document.getElementById("monthBg").src, dayBg:document.getElementById("dayBg").src, monthLayout:localStorage.getItem("monthLayout"), monthContent:localStorage.getItem("monthContent-"+month), monthTitle:localStorage.getItem("monthTitle"), dayLayout:localStorage.getItem("dayLayoutPositions"), dayContent:{}};
+  for(let d=1;d<=31;d++){data.dayContent[d]=localStorage.getItem("dayContent-"+d);}
+  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  if(navigator.share){navigator.share({files:[new File([blob],"calendrier_export.json",{type:"application/json"})]});}
+  else{const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="calendrier_export.json"; a.click(); URL.revokeObjectURL(url);}
+}
+function importData(){
+  const input=document.createElement("input"); input.type="file"; input.accept=".json";
+  input.onchange=e=>{
+    const file=e.target.files[0]; const reader=new FileReader();
+    reader.onload=event=>{
+      const data=JSON.parse(event.target.result);
+      document.getElementById("monthBg").src=data.monthBg; document.getElementById("dayBg").src=data.dayBg;
+      localStorage.setItem("monthLayout",data.monthLayout); localStorage.setItem("monthContent-"+month,data.monthContent); localStorage.setItem("monthTitle",data.monthTitle);
+      localStorage.setItem("dayLayoutPositions",data.dayLayout);
+      for(let d=1;d<=31;d++){localStorage.setItem("dayContent-"+d,data.dayContent[d]);}
+      renderMonthGrid(); loadMonthTextBoxes(); loadTextBoxes();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ===== RESET ALL =====
+function resetAll(){document.querySelectorAll(".text-box").forEach(b=>b.remove()); localStorage.removeItem("monthLayout"); localStorage.removeItem("monthContent-"+month); localStorage.removeItem("monthTitle"); localStorage.removeItem("dayLayoutPositions"); for(let d=1;d<=31;d++){localStorage.removeItem("dayContent-"+d);}}
+
+// ===== NAV MONTH =====
+function changeMonth(offset){
+  month+=offset;
+  if(month<0){month=11; year--;}
+  if(month>11){month=0; year++;}
+  document.getElementById("monthName").innerText=monthNames[month];
+  renderMonthGrid(); loadMonthTextBoxes();
 }
 </script>
 
